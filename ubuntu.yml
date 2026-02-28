@@ -1,0 +1,109 @@
+- name: Ubuntu Playbook
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Instalação dos aplicativos Linux
+      become: true
+      apt:
+        name: '{{ item }}'
+        install_recommends: yes
+        state: present
+      loop:
+        - git
+        - nano
+        - deluge
+        - git
+        - gscan2pdf
+        - htop
+        - plank
+        - vlc
+        - zsh
+        - wget
+        - flameshot
+
+    - block:
+      - name: Verificando instalação do Oh My Zsh
+        command: test -d /home/{{ ansible_user_id }}/.oh-my-zsh
+        register: ohmyzsh
+        ignore_errors: true
+      - name: Instalando Oh My Zsh
+        shell:
+          cmd: 'curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh | bash'
+          warn: false
+        when: ohmyzsh.rc != 0
+      - name: Declarando Zsh como shell padrão
+        become: yes
+        user:
+          name: '{{ ansible_user_id }}'
+          shell: /bin/zsh
+      - name: Alterando o tema do Zsh para Agnoster
+        lineinfile:
+          path: /home/{{ ansible_user_id }}/.zshrc
+          regexp: '^ZSH_THEME='
+          line: 'ZSH_THEME="agnoster"'
+      - name: Criando o diretório de autocomplete do Zsh
+        file:
+          path: /home/{{ ansible_user_id }}/.oh-my-zsh/completions
+          state: directory
+          mode: 0755
+      - name: Adicionando autoload ao compinit
+        lineinfile:
+          path: /home/{{ ansible_user_id }}/.zshrc
+          line: 'autoload -U compinit && compinit'
+          state: present
+
+    - block:
+      - name: Download da chave GPG do Brave Browser
+        become: true
+        get_url:
+          url: https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
+          dest: /usr/share/keyrings/brave-browser-archive-keyring.gpg
+          mode: 0644
+      - name: Download do repositório do Brave Browser
+        become: true
+        get_url:
+          url: https://brave-browser-apt-release.s3.brave.com/brave-browser.sources
+          dest: /etc/apt/sources.list.d/brave-browser-release.sources
+          mode: 0644
+      - name: apt update e instalação do Brave Browser
+        become: true
+        apt:
+          update_cache: yes
+          name: brave-browser
+          state: present
+
+    - name: Criando diretório de Apps
+      file:
+        path: /home/{{ ansible_user_id }}/Apps
+        state: directory
+        mode: 0755
+    
+    - block:
+      - name: Download Hyper Terminal
+        get_url:
+          url: https://releases.hyper.is/download/AppImage
+          dest: /home/{{ ansible_user_id }}/Apps
+      - name: Permitindo execução do Hyper Terminal
+        file:
+          path: /home/{{ ansible_user_id }}/Apps/Hyper-3.4.1.AppImage
+          mode: 0775
+
+    - block:
+      - name: Instalando Jetbrains Toolbox
+        unarchive:
+          src: https://download.jetbrains.com/toolbox/jetbrains-toolbox-3.2.0.65851.tar.gz
+          dest: /home/{{ ansible_user_id }}/Apps
+          remote_src: yes
+      - name: Permitindo execução do Jetbrains Toolbox
+        file:
+          path: /home/{{ ansible_user_id }}/Apps/jetbrains-toolbox-3.2.0.65851/bin/jetbrains-toolbox
+          mode: 0775
+      - name: Criando desktop entry do Jetbrains Toolbox
+        copy:
+          src: /home/{{ ansible_user_id }}/Apps/jetbrains-toolbox-3.2.0.65851/bin/jetbrains-toolbox.desktop
+          dest: /home/{{ ansible_user_id }}/.local/share/applications/jetbrains-toolbox.desktop
+          mode: 0644
+      - name: Removendo arquivo tar.gz do Jetbrains Toolbox
+        file:
+          path: /home/{{ ansible_user_id }}/Apps/jetbrains-toolbox.tar.gz
+          state: absent
