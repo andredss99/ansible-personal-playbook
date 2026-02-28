@@ -11,6 +11,7 @@ Este projeto utiliza o [Ansible](https://www.ansible.com/) para automatizar a co
 - Ubuntu (versão 20.04 ou superior)
 - Acesso à internet
 - Privilégios de superusuário (sudo)
+- `curl` instalado (`sudo apt install -y curl`)
 
 ## Instalação do Ansible
 
@@ -41,16 +42,35 @@ cd ansible-personal-playbook
 2. Execute o playbook com o comando abaixo:
 
 ```bash
-ansible-playbook playbook.yml --ask-become-pass
+ansible-playbook -i inventory.ini ubuntu.yml --ask-become-pass
 ```
 
 O parâmetro `--ask-become-pass` solicitará a senha do `sudo` para executar as tarefas que requerem privilégios de superusuário.
 
 ## O que este playbook configura
 
-- Atualização do sistema operacional
-- Instalação de pacotes e ferramentas de desenvolvimento
-- Configuração de aplicativos pessoais
+### Pacotes instalados via apt
+
+- `git`, `nano`, `wget`, `htop`
+- `zsh`
+- `vlc`
+- `deluge` (cliente BitTorrent)
+- `gscan2pdf` (digitalização de documentos)
+- `plank` (dock)
+- `flameshot` (captura de tela)
+- `brave-browser` (navegador Brave)
+
+### Oh My Zsh
+
+- Instalação do [Oh My Zsh](https://ohmyz.sh/)
+- Tema configurado: **Agnoster**
+- Autocompletion habilitado via `compinit`
+- Zsh definido como shell padrão do usuário
+
+### Aplicativos em `~/Apps`
+
+- **Hyper Terminal** (AppImage)
+- **JetBrains Toolbox** (com criação de atalho `.desktop`)
 
 ## Licença
 
